@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-undef */
 /* eslint-disable quotes */
 import mongodb from "mongodb";
 import envLoader from "./env_loader";
@@ -15,7 +17,7 @@ class DBClient {
     const database = process.env.DB_DATABASE || "files_manager";
     const dbURL = `mongodb://${host}:${port}/${database}`;
 
-    this.client = new mongodb.MongoClient(dbURL);
+    this.client = new MongoClient(dbURL);
     this.client.connect();
   }
 
