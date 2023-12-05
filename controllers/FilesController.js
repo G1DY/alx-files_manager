@@ -29,9 +29,9 @@ class FilesController {
     const {
       name, type, parentId, isPublic, data,
     } = req.body;
-    if (!name) return res.status(401).json({ error: 'Missing name' });
-    if (!type || !typesOfDocs.includes(type)) return res.status(401).json({ error: 'Missing type' });
-    if (!data && ['file', 'image'].includes(type)) return res.status(401).json({ error: 'Missing data' });
+    if (!name) return res.status(400).json({ error: 'Missing name' });
+    if (!type || !typesOfDocs.includes(type)) return res.status(400).json({ error: 'Missing type' });
+    if (!data && ['file', 'image'].includes(type)) return res.status(400).json({ error: 'Missing data' });
 
     // // check if the parentId is present
     const files = dbClient.db.collection('files');
