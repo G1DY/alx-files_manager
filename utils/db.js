@@ -1,7 +1,5 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-undef */
 /* eslint-disable quotes */
-import mongodb from "mongodb";
+import { MongoClient } from "mongodb";
 import envLoader from "./env_loader";
 
 process.on("unhandledRejection", (reason, promise) => {
