@@ -1,5 +1,5 @@
 /* eslint-disable quotes */
-import { MongoClient } from "mongodb";
+import mongodb from "mongodb";
 import envLoader from "./env_loader";
 
 process.on("unhandledRejection", (reason, promise) => {
@@ -15,7 +15,7 @@ class DBClient {
     const database = process.env.DB_DATABASE || "files_manager";
     const dbURL = `mongodb://${host}:${port}/${database}`;
 
-    this.client = new MongoClient(dbURL);
+    this.client = new mongodb.MongoClient(dbURL);
     this.client.connect();
   }
 
