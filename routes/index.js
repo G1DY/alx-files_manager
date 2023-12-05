@@ -8,7 +8,7 @@ const injectRoutes = (api) => {
   api.get('/status', AppController.getStatus);
 
   api.get('/stats', AppController.getStats);
-  
+
   api.get('/connect', AuthController.getConnect);
 
   api.get('/disconnect', AuthController.getDisconnect);
