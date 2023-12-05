@@ -1,3 +1,4 @@
+/* eslint-disable quotes */
 /* eslint-disable no-unused-vars */
 import { promisify } from "util";
 import { createClient } from "redis";
@@ -9,6 +10,7 @@ class RedisClient {
     this.client.on("error", (err) => {
       console.error(
         "Redis client failed to connect:",
+        // eslint-disable-next-line comma-dangle
         err.message || err.toString()
       );
       this.isClientConnected = false;
