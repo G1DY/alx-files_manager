@@ -47,10 +47,10 @@ class FilesController {
 
     if (type === 'folder') {
       const result = await files.insertOne(newFile);
-      // newFile.id = result.insertedId;
+      newFile.id = result.insertedId;
       delete newFile._id;
       res.setHeader('Content-Type', 'application/json');
-      return res.status(201).json({ id: result.insertedId, ...newFile });
+      return res.status(201).json({ ...newFile });
     }
 
     // store locally and add local path
