@@ -121,8 +121,14 @@ class FilesController {
 
   static async getIndex(req, res) {
     // check user by token
-    const user = await FilesController.getUserBasedOnToken(req);
-    if (!user) return res.status(401).send({ error: 'Unauthorized' });
+    const token = req.header('X-Token') || null;
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+    const authToken = await redisClient.get(`auth_${token}`);
+    if (!authToken) return res.status(401).json({ error: 'Unauthorized' });
+
+    const user = dbClient.db.collection('users').findOne({ _id: ObjectId(authToken) });
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
     const parentId = req.query.parentId || 0;
 
