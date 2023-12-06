@@ -97,7 +97,7 @@ class FilesController {
   }
 
   static async getShow(req, res) {
-    const fileId = req.params.id;
+    const fileId = req.params.id || '';
 
     // check user by token
     const token = req.header('X-Token') || null;
