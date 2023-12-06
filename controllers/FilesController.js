@@ -141,7 +141,7 @@ class FilesController {
     const filesArray = [];
     await fileDocs.forEach((item) => {
       const file = {
-        id: item.id,
+        id: item._id,
         userId: item.userId,
         name: item.name,
         type: item.type,
