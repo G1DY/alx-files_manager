@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 import fs from 'fs';
-import path from 'path';
+import path, { resolve } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import mime from 'mime-types';
 import Queue from 'bull';
@@ -219,6 +219,14 @@ class FilesController {
     });
     if (!user) return null;
     return user;
+  }
+
+  static pathExists(path) {
+    return new Promise((resolve) => {
+      fs.access(path, fs.constants.F_OK, (err) => {
+        resolve(!err);
+      });
+    });
   }
 }
 
