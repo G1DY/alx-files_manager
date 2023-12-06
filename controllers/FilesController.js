@@ -122,30 +122,35 @@ class FilesController {
   }
 
   static async getIndex(req, res) {
-    const token = req.header('X-Token') || null;
-    if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
-    const authToken = await redisClient.get(`auth_${token}`);
-    if (!authToken) return res.status(401).json({ error: 'Unauthorized' });
-
-    const user = dbClient.db.collection('users').findOne({ _id: ObjectId(authToken) });
-    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    const user = await FilesController.getUserBasedOnToken(req);
+    if (!user) return res.status(401).send({ error: 'Unauthorized' });
 
     // get the query params and find the all files with pagination
-    const { parentId, page } = req.query;
-    const parent = parentId || 0;
+    const parentId = req.query.parentId || 0;
+    const page = req.query.page || 0;
     const limit = 20;
-    const skip = page ? page * limit : 0;
+    const skip = page * limit;
 
-    const aggregationMatch = { $and: [{ parent }] };
+    const aggregationMatch = { $and: [{ parentId }] };
     let aggregateData = [{ $match: aggregationMatch }, { $skip: skip }, { $limit: limit }];
-    if (parent === 0) aggregateData = [{ $skip: skip }, { $limit: limit }];
+    if (parentId === 0) aggregateData = [{ $skip: skip }, { $limit: limit }];
 
     const files = dbClient.db.collection('files');
 
     const fileDocs = await files.aggregate(aggregateData);
     const filesArray = [];
-    await fileDocs.forEach((item) => filesArray.push(item));
+    await fileDocs.forEach((item) => {
+      const file = {
+        id: item.id,
+        userId: item.userId,
+        name: item.name,
+        type: item.type,
+        isPublic: item.isPublic,
+        parentId: item.parentId,
+      };
+      filesArray.push(file);
+    });
 
     return res.json(filesArray);
   }
