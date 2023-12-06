@@ -16,7 +16,7 @@ class FilesController {
       },
     });
     // check user by token
-    const user = await this.getUserBasedOnToken(req);
+    const user = await FilesController.getUserBasedOnToken(req);
     if (!user) return res.status(401).send({ error: 'Unauthorized' });
 
     // check the req body properties for creating the file
