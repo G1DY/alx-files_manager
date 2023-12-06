@@ -50,7 +50,7 @@ class FilesController {
       newFile.id = result.insertedId;
       delete newFile._id;
       res.setHeader('Content-Type', 'application/json');
-      return res.status(201).json({ newFile });
+      return res.status(201).json({ ...newFile });
     }
 
     // store locally and add local path
@@ -78,7 +78,7 @@ class FilesController {
 
     if (newFile.type === 'image') fileQueue.add({ userId: newFile.userId, fileId: newFile.id });
 
-    return res.status(201).send({ newFile });
+    return res.status(201).send({ ...newFile });
   }
 
   static async getShow(req, res) {
