@@ -115,7 +115,7 @@ class FilesController {
     if (!file) {
       return res.status(404).send({ error: 'Not found' });
     }
-    return res.send({
+    return res.status(200).send({
       id: file._id,
       userId: file.userId,
       name: file.name,
@@ -158,7 +158,7 @@ class FilesController {
       filesArray.push(fileItem);
     });
 
-    return res.send(filesArray);
+    return res.status(200).send(filesArray);
   }
 
   static async putPublish(req, res) {
