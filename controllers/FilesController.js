@@ -122,7 +122,6 @@ class FilesController {
   }
 
   static async getIndex(req, res) {
-
     const user = await FilesController.getUserBasedOnToken(req);
     if (!user) return res.status(401).send({ error: 'Unauthorized' });
 
@@ -142,7 +141,7 @@ class FilesController {
     const filesArray = [];
     await fileDocs.forEach((item) => {
       const file = {
-        id: item.id,
+        id: item._id,
         userId: item.userId,
         name: item.name,
         type: item.type,
