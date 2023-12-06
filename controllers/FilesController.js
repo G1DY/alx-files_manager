@@ -174,10 +174,11 @@ class FilesController {
     const files = dbClient.db.collection('files');
     const fileId = req.params.id;
     let fileDoc = await files.findOne({ _id: ObjectId(fileId), userId: user._id });
-    if (!fileDoc) return res.status(404).send({ error: 'Not found' });
-
+    if (!fileDoc) {
+      return res.status(404).send({ error: 'Not found' });
+    }
     await files.update({ _id: ObjectId(fileId) }, { $set: { isPublic: true } });
-    fileDoc = files.findOne({ _id: ObjectId(fileId), userId: user._id });
+    fileDoc = files.findOne({ _id: ObjectId(fileId) });
 
     return res.status(200).json({
       id: fileDoc._id,
