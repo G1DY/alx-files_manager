@@ -81,7 +81,7 @@ class FilesController {
 
     const result = await files.insertOne(newFile);
 
-    newFile.id = result.insertedId;    
+    newFile.id = result.insertedId;
     delete newFile._id;
 
     if (newFile.type === 'image') fileQueue.add({ userId: newFile.userId, fileId: newFile.id });
