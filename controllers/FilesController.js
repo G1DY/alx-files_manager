@@ -50,7 +50,14 @@ class FilesController {
       newFile.id = result.insertedId;
       delete newFile._id;
       res.setHeader('Content-Type', 'application/json');
-      return res.status(201).json({ ...newFile });
+      return res.status(201).json({
+        id: newFile.id,
+        userId: newFile.userId,
+        name: newFile.name,
+        type: newFile.type,
+        isPublic: newFile.isPublic,
+        parentId: newFile.parentId,
+      });
     }
 
     // store locally and add local path
@@ -70,15 +77,23 @@ class FilesController {
       return true;
     });
 
+    newFile.localPath = localPath;
+
     const result = await files.insertOne(newFile);
 
-    newFile.id = result.insertedId;
+    newFile.id = result.insertedId;    
     delete newFile._id;
-    delete newFile.localPath;
 
     if (newFile.type === 'image') fileQueue.add({ userId: newFile.userId, fileId: newFile.id });
 
-    return res.status(201).send({ id: result.insertedId, ...newFile });
+    return res.status(201).send({
+      id: newFile.id,
+      userId: newFile.userId,
+      name: newFile.name,
+      type: newFile.type,
+      isPublic: newFile.isPublic,
+      parentId: newFile.parentId,
+    });
   }
 
   static async getShow(req, res) {
