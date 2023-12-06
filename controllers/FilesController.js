@@ -72,13 +72,13 @@ class FilesController {
 
     const result = await files.insertOne(newFile);
 
-    const storedFile = { ...newFile, id: result.insertedId };
-    delete storedFile._id;
-    delete storedFile.localPath;
+    newFile.id = result.insertedId;
+    delete newFile._id;
+    delete newFile.localPath;
 
-    if (storedFile.type === 'image') fileQueue.add({ userId: storedFile.userId, fileId: storedFile.id });
+    if (newFile.type === 'image') fileQueue.add({ userId: newFile.userId, fileId: newFile.id });
 
-    return res.status(201).send({ storedFile });
+    return res.status(201).send({ newFile });
   }
 
   static async getShow(req, res) {
