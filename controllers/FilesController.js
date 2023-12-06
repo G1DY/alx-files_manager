@@ -128,50 +128,25 @@ class FilesController {
 
     const page = req.query.page || 0;
 
-    const pageNo = page || 1;
+    const aggregationMatch = { $and: [{ parentId }] };
+    let aggregateData = [{ $match: aggregationMatch }, { $skip: page * 20 }, { $limit: 20 }];
+    if (parentId === 0) aggregateData = [{ $skip: page * 20 }, { $limit: 20 }];
 
-    const skip = (pageNo - 1) * 20;
-
-    let query;
-    if (!parentId) query = { userId: user._id };
-    query = { userId: user._id, parentId };
-
-    const files = dbClient.db.collection('files');
-
-    const result = await files.aggregate([
-      {
-        $match: query,
-      },
-      {
-        $skip: skip,
-      },
-      {
-        $limit: 20,
-      },
-    ]).toArray();
-
-    const finalRes = result.map((file) => {
-      const newFile = {
-        ...file,
-        id: file._id,
+    const files = await dbClient.db.collection('files').aggregate(aggregateData);
+    const filesArray = [];
+    await files.forEach((item) => {
+      const fileItem = {
+        id: item._id,
+        userId: item.userId,
+        name: item.name,
+        type: item.type,
+        isPublic: item.isPublic,
+        parentId: item.parentId,
       };
-      return newFile;
+      filesArray.push(fileItem);
     });
 
-    // const filesArray = [];
-    // await files.forEach((item) => {
-    //   const fileItem = {
-    //     id: item._id,
-    //     userId: item.userId,
-    //     name: item.name,
-    //     type: item.type,
-    //     isPublic: item.isPublic,
-    //     parentId: item.parentId,
-    //   };
-    //   filesArray.push(fileItem);
-    // });
-
-    return res.send(finalRes);
+    return res.send(filesArray);
   }
 
   static async putPublish(req, res) {
