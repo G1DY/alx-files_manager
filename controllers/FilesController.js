@@ -78,7 +78,7 @@ class FilesController {
 
     if (newFile.type === 'image') fileQueue.add({ userId: newFile.userId, fileId: newFile.id });
 
-    return res.status(201).send({  id: result.insertedId, ...newFile });
+    return res.status(201).send({ id: result.insertedId, ...newFile });
   }
 
   static async getShow(req, res) {
