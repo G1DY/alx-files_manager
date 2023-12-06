@@ -79,20 +79,21 @@ class FilesController {
   }
 
   static async getShow(req, res) {
-    const token = req.header('X-Token') || null;
-    if (!token) return res.status(401).send({ error: 'Unauthorized' });
+    const { id } = req.params;
 
-    const authToken = await redisClient.get(`auth_${token}`);
-    if (!authToken) return res.status(401).send({ error: 'Unauthorized' });
-
-    const user = await dbClient.db.collection('users').findOne({ _id: ObjectId(authToken) });
-    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    const user = await this.getUserBasedOnToken(req);
+    if (!user) return res.status(401).send({ error: 'Unauthorized' });
 
     // get the file id
-    const fileId = req.params.id || '';
-    const fileDoc = await dbClient.db.collection('files').findOne({ _id: ObjectId(fileId), userId: user._id });
-    if (!fileDoc) return res.status(404).json({ error: 'Not found' });
-    return res.status(200).json(fileDoc);
+    const files = dbClient.db.collection('files');
+    const file = await files.findOne({ _id: ObjectId(id), userId: user._id });
+    if (!file) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+    file.id = file._id;
+    delete file._id;
+    delete file.localPath;
+    return res.status(200).send(file);
   }
 
   static async getIndex(req, res) {
