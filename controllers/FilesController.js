@@ -82,21 +82,28 @@ class FilesController {
   }
 
   static async getShow(req, res) {
-    const { id } = req.params;
+    const fileId = req.params.id || '';
 
-    const user = await this.getUserBasedOnToken(req);
+    // check user by token
+    const user = await FilesController.getUserBasedOnToken(req);
     if (!user) return res.status(401).send({ error: 'Unauthorized' });
 
     // get the file id
     const files = dbClient.db.collection('files');
-    const file = await files.findOne({ _id: ObjectId(id), userId: user._id });
+    const file = await files.findOne({ _id: ObjectId(fileId), userId: user._id });
     if (!file) {
       return res.status(404).json({ error: 'Not found' });
     }
     file.id = file._id;
     delete file._id;
-    delete file.localPath;
-    return res.status(200).send(file);
+    return res.status(200).send({
+      id: file.id,
+      userId: file.userId,
+      name: file.name,
+      type: file.type,
+      isPublic: file.isPublic,
+      parentId: file.parentId,
+    });
   }
 
   static async getIndex(req, res) {
