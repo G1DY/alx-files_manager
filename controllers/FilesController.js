@@ -122,7 +122,6 @@ class FilesController {
   }
 
   static async getIndex(req, res) {
-
     const user = await FilesController.getUserBasedOnToken(req);
     if (!user) return res.status(401).send({ error: 'Unauthorized' });
 
