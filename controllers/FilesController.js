@@ -1,6 +1,5 @@
 import { ObjectId } from 'mongodb';
 import fs from 'fs';
-import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import mime from 'mime-types';
 import Queue from 'bull';
@@ -58,14 +57,18 @@ class FilesController {
     const folderPath = process.env.FOLDER_PATH || '/tmp/files_manager';
     const fileName = uuidv4();
     const buff = Buffer.from(data, 'base64');
-    const localPath = path.join(folderPath, fileName);
+    const localPath = `${folderPath}/${fileName}`;
 
     // create directory if not exists
+    await fs.mkdir(folderPath, { recursive: true }, (err) => {
+      if (err) return res.status(400).send({ error: err.message });
+      return true;
+    });
 
-    const pathExists = await this.pathExists(folderPath);
-    if (!pathExists) await fs.promises.mkdir(folderPath, { recursive: true });
-
-    await fs.promises.writeFile(localPath, buff, 'utf-8');
+    await fs.writeFile(localPath, buff, (err) => {
+      if (err) return res.status(400).send({ error: err.message });
+      return true;
+    });
 
     const result = await files.insertOne(newFile);
 
@@ -219,14 +222,6 @@ class FilesController {
     });
     if (!user) return null;
     return user;
-  }
-
-  static pathExists(path) {
-    return new Promise((resolve) => {
-      fs.access(path, fs.constants.F_OK, (err) => {
-        resolve(!err);
-      });
-    });
   }
 }
 
