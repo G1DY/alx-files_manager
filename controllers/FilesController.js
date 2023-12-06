@@ -214,7 +214,7 @@ class FilesController {
     if (!authToken) return null;
 
     const user = await dbClient.db.collection('users').findOne({
-      _id: ObjectId(authToken)
+      _id: ObjectId(authToken),
     });
     if (!user) return null;
     return user;
