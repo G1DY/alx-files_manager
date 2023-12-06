@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb';
 import fs from 'fs';
+import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import mime from 'mime-types';
 import Queue from 'bull';
@@ -15,35 +16,30 @@ class FilesController {
       },
     });
     // check user by token
-    const token = req.header('X-Token') || null;
-    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+    const user = await this.getUserBasedOnToken(req);
+    if (!user) return res.status(401).send({ error: 'Unauthorized' });
 
-    const authToken = await redisClient.get(`auth_${token}`);
-    if (!authToken) return res.status(401).json({ error: 'Unauthorized' });
-
-    const user = await dbClient.db.collection('users').findOne({ _id: ObjectId(authToken) });
-    if (!user) return res.status(401).json({ error: 'Unauthorized' });
-
-    // // check the req body properties for creating the file
+    // check the req body properties for creating the file
     const typesOfDocs = ['folder', 'file', 'image'];
     const {
       name, type, parentId, isPublic, data,
     } = req.body;
-    if (!name) return res.status(400).json({ error: 'Missing name' });
-    if (!type || !typesOfDocs.includes(type)) return res.status(400).json({ error: 'Missing type' });
-    if (!data && ['file', 'image'].includes(type)) return res.status(400).json({ error: 'Missing data' });
+    if (!name) return res.status(400).send({ error: 'Missing name' });
+    if (!type || !typesOfDocs.includes(type)) return res.status(400).send({ error: 'Missing type' });
+    if (!data && type !== 'folder') return res.status(400).send({ error: 'Missing data' });
 
-    // // check if the parentId is present
     const files = dbClient.db.collection('files');
+
+    // check if the parentId is present
     if (parentId) {
-      const parentFile = await files.findOne({ _id: ObjectId(parentId) });
-      if (!parentFile) return res.status(400).json({ error: 'Parent not found' });
-      if (parentFile.type !== 'folder') return res.status(400).json({ error: 'Parent is not a folder' });
+      const parent = await files.findOne({ _id: ObjectId(parentId) });
+      if (!parent) return res.status(400).send({ error: 'Parent not found' });
+      if (parent.type !== 'folder') return res.status(400).send({ error: 'Parent is not a folder' });
     }
 
-    // // create file
+    // create file
     const newFile = {
-      userId: user._id,
+      userId: user._id.toString(),
       name,
       type,
       isPublic: isPublic || false,
@@ -52,32 +48,34 @@ class FilesController {
 
     if (type === 'folder') {
       const result = await files.insertOne(newFile);
-      return res.status(201).json({ id: result.insertedId, ...newFile });
+      newFile.id = result.insertedId;
+      delete newFile._id;
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(201).json({ newFile });
     }
 
     // store locally and add local path
     const folderPath = process.env.FOLDER_PATH || '/tmp/files_manager';
     const fileName = uuidv4();
-    const buff = Buffer.from(newFile, 'base64');
-    const localPath = `${folderPath}/${fileName}`;
+    const buff = Buffer.from(data, 'base64');
+    const localPath = path.join(folderPath, fileName);
 
-    await fs.mkdir(folderPath, { recursive: true }, (error) => {
-      if (error) return res.status(400).send({ error: error.message });
-      return true;
-    });
+    // create directory if not exists
 
-    await fs.writeFile(localPath, buff, (error) => {
-      if (error) return res.status(400).send({ error: error.message });
-      return true;
-    });
+    const pathExists = await this.pathExists(folderPath);
+    if (!pathExists) await fs.promises.mkdir(folderPath, { recursive: true });
 
-    newFile.localPath = localPath;
+    await fs.promises.writeFile(localPath, buff, 'utf-8');
 
-    await files.insertOne(newFile);
+    const result = await files.insertOne(newFile);
 
-    if (newFile.type === 'image') fileQueue.add({ userId: newFile.userId, fileId: newFile._id });
+    const storedFile = { ...newFile, id: result.insertedId };
+    delete storedFile._id;
+    delete storedFile.localPath;
 
-    return res.status(201).json({ id: newFile._id, ...newFile });
+    if (storedFile.type === 'image') fileQueue.add({ userId: storedFile.userId, fileId: storedFile.id });
+
+    return res.status(201).send({ storedFile });
   }
 
   static async getShow(req, res) {
@@ -204,6 +202,22 @@ class FilesController {
     } catch (error) {
       return res.status(404).json({ error: 'Not found' });
     }
+  }
+
+  // helper functions
+  static async getUserBasedOnToken(req) {
+    // retrives user using the token given
+    const token = req.header('X-Token') || null;
+    if (!token) return null;
+
+    const authToken = await redisClient.get(`auth_${token}`);
+    if (!authToken) return null;
+
+    const user = await dbClient.db.collection('users').findOne({
+      _id: ObjectId(authToken)
+    });
+    if (!user) return null;
+    return user;
   }
 }
 
